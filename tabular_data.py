@@ -36,13 +36,13 @@ class clean_tabular_data():
         for col in df.columns:
             if is_numeric_dtype(df[col])== False:
                 df=df.drop(col, axis=1)
-        print(df.head())
-        for col in df.columns:
-            print(col)
+        # print(df.head())
+        # for col in df.columns:
+        #     print(col)
         label=df[kwargs['label']]
         features=df[kwargs['features']]
-        print('label\n',label)
-        print('features\n',features)
+        # print('label\n',label)
+        # print('features\n',features)
         return label,features
         
 
