@@ -1,38 +1,49 @@
 import pandas as pd
 
-class clean_tabular_data():
-    def __init__(self):
-        self.df=pd.read_csv('./tabular_data/listing.csv')
+def remove_rows_with_missing_ratings(df):
+    df=df.dropna(subset=["Cleanliness_rating",'Accuracy_rating', 'Communication_rating'	,'Location_rating',	'Check-in_rating' ,	'Value_rating' ])
+    return df
 
-    def remove_rows_with_missing_ratings(self):
-        self.df=self.df.dropna(subset=["Cleanliness_rating",'Accuracy_rating', 'Communication_rating'	,'Location_rating',	'Check-in_rating' ,	'Value_rating' ])
-       
-    def combine_description_strings(self):
-        self.df = self.df.dropna(subset=['Description'])
-        self.df["Description"] = self.df["Description"].apply(lambda x: x.replace("'About this space', ", '').replace("'', ", '').replace('[', '').replace(']', '').replace('\\n', '.      ').replace("''", '').split(" "))
-        self.df["Description"] = self.df["Description"].apply(lambda x: " ".join(x))
-        
-    def set_default_feature_values(self):
-        self.df[["guests", "beds", "bathrooms","bedrooms"]]=self.df[["guests", "beds", "bathrooms","bedrooms"]].fillna(value=1)
-
-    def load_airbnb(self,df):
-        df = df.drop(columns=["Unnamed: 19"])
-        df = df.drop(columns=["Unnamed: 0"])
-
-        features = df.drop(columns=['Price_Night', 'ID', 'Category', 'Title', 'Description', 'Amenities', 'Location', 'url'])
-        labels = df["Price_Night"]
-
-        features_labels  = (features, labels)
-        return features_labels    
+def combine_description_strings(df):
+    df = df.dropna(subset=['Description'])
+    df["Description"] = df["Description"].apply(lambda x: x.replace("'About this space', ", '').replace("'', ", '').replace('[', '').replace(']', '').replace('\\n', '.      ').replace("''", '').split(" "))
+    df["Description"] = df["Description"].apply(lambda x: " ".join(x))
+    return df
     
+def set_default_feature_values(df):
+    df.loc[:, ["guests", "bedrooms"]] = df.loc[:, ["guests", "bedrooms"]].fillna('1')
+    df.loc[:, ["beds", "bathrooms"]] = df.loc[:, ["beds", "bathrooms"]].fillna(1)
+    
+    # print(df['guests'].tolist())
+    df.loc[df["guests"] == 'Somerford Keynes England United Kingdom', "guests"] = '1'
+    df.loc[df["bedrooms"] == 'https://www.airbnb.co.uk/rooms/49009981?adults=1&category_tag=Tag%3A677&children=0&infants=0&search_mode=flex_destinations_search&check_in=2022-04-18&check_out=2022-04-25&previous_page_section_name=1000&federated_search_id=0b044c1c-8d17-4b03-bffb-5de13ff710bc', "bedrooms"] = '1'
+    return df
+
+def clean_tabular_data(df):
+    df = remove_rows_with_missing_ratings(df)
+    df = combine_description_strings(df)
+    df = set_default_feature_values(df)
+    return df
+
+def load_airbnb(df):
+    
+    df = df.drop(columns=["Unnamed: 19"])
+    df = df.drop(columns=["Unnamed: 0"])
+
+    features = df.drop(columns=['Price_Night', 'ID', 'Category', 'Title', 'Description', 'Amenities', 'Location', 'url'])
+   
+    labels = df["Price_Night"]
+
+    features_labels  = (features, labels)
+    return features_labels    
+
 if __name__ =='__main__':
-    tabular_data=clean_tabular_data()
-    tabular_data.remove_rows_with_missing_ratings()
-    tabular_data.combine_description_strings()
-    tabular_data.set_default_feature_values()
-    tabular_data.df.to_csv('clean_data.csv')
+    df=pd.read_csv('./tabular_data/listing.csv')
+    print(df['guests'])
+    df=clean_tabular_data(df)
+    df.to_csv('clean_data.csv')
     df = pd.read_csv('clean_data.csv')
-    feature_labels = tabular_data.load_airbnb(df)
+    feature_labels = load_airbnb(df)
     feature, labels = feature_labels
-    print(feature)
-    print(labels)
+    # print(feature)
+    # print(labels)
