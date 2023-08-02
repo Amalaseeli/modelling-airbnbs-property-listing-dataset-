@@ -40,16 +40,16 @@ if __name__ == '__main__':
     print(len(y_train))
     print(len(y_test))
 
-    # # select model
+    #select model
     model = SGDRegressor()
     model.fit(X_train, y_train)
 
-
+    #Estmate predcted labels
     y_train_pred = model.predict(X_train)
     y_validation_pred = model.predict(X_validation)
     y_test_pred = model.predict(X_test)
 
-    #RMSE
+    #model performance:RMSE
     train_rmse = np.sqrt(mean_squared_error(y_train, y_train_pred))
     validation_rmse = np.sqrt(mean_squared_error(y_validation, y_validation_pred))
     test_rmse = np.sqrt(mean_squared_error(y_test, y_test_pred))
