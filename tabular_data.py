@@ -41,8 +41,8 @@ if __name__ =='__main__':
     df=pd.read_csv('./tabular_data/listing.csv')
     print(df['guests'])
     df=clean_tabular_data(df)
-    df.to_csv('clean_data.csv')
-    df = pd.read_csv('clean_data.csv')
+    df.to_csv('clean_tabular_data.csv')
+    df = pd.read_csv('clean_tabular_data.csv')
     feature_labels = load_airbnb(df)
     feature, labels = feature_labels
     # print(feature)

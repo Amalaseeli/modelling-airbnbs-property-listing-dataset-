@@ -36,7 +36,7 @@ def tune_regression_model_hyperparameters(model, X_train, y_train, X_test, y_tes
 
 
 def save_model(folder:str, best_model, best_params:dict, performance_metric:dict):
-        joblib.dump(best_model, f"{folder}/model.joblb")
+        joblib.dump(best_model, f"{folder}/model.joblib")
 
         with open(f"{folder}/hyperparameters.json", 'w') as fp:
             json.dump(best_params, fp)
