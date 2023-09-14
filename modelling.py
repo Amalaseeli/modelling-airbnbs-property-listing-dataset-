@@ -44,7 +44,7 @@ if __name__ == '__main__':
     model = SGDRegressor()
     model.fit(X_train, y_train)
 
-    #Estmate predcted labels
+    #Estimate predicted labels
     y_train_pred = model.predict(X_train)
     y_validation_pred = model.predict(X_validation)
     y_test_pred = model.predict(X_test)
