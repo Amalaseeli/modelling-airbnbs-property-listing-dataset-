@@ -19,13 +19,10 @@ def get_image_file_path(imagedir):
     return image_file_list        
     print( image_file_list)
 
-  
-
 def resize_images(fp):
     filepath='C:/Users/admin/Documents/amala/Career_amala/Aicore/modelling-airbnbs-property-listing-dataset-/images/'+fp
     img=Image.open(filepath)
     img.show()
-
 
 if __name__=='__main__':
    imagedir= get_image_folders(folder_dir)

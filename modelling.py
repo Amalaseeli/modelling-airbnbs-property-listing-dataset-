@@ -1,7 +1,6 @@
 import tabular_data
 import pandas as pd
 import numpy as np
-# from sklearn import datasets, model_selection
 from sklearn.linear_model import SGDRegressor
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
@@ -10,20 +9,14 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import r2_score
 
-
-
 def split_data(X, y):
     '''Splits Test, Train and Validation data'''
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
     X_test, X_validation, y_test, y_validation = train_test_split(X_test, y_test, test_size=0.5)
     return X_train, y_train, X_test, y_test, X_validation, y_validation
 
-
-
 if __name__ == '__main__':
-
     # load the data
-    
     df = pd.read_csv('clean_data.csv')
     X,y=tabular_data.load_airbnb(df)
     X=X.to_numpy()
