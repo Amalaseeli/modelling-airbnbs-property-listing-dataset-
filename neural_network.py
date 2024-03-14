@@ -1,3 +1,4 @@
+from typing import Any
 import torch
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
@@ -20,6 +21,27 @@ class AirbnbNightlyPriceRegressionDataset(Dataset):
     def __len__(self):
         return len(self.X)
     
+#model class
+class FeedForward(torch.nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        self.layers=torch.nn.Sequential(
+            torch.nn.Linear(11,16),
+            torch.nn.ReLU(),
+            torch.nn.Linear(16,1)
+        )
+
+    def forward(self, features) -> Any:
+        return self.layers(features)
+      
+def train(model,dataloader,epochs:int):
+     for epoch in range(epochs):
+          for batch_idx,batch in enumerate(dataloader):
+               features,labels=batch 
+               prediction=model(features)
+               print(prediction)
+               break
+        
 if __name__=='__main__':
     file='clean_tabular_data.csv'
     df=pd.read_csv(file)
@@ -38,3 +60,13 @@ if __name__=='__main__':
     dataloader_test=DataLoader(dataset_test,batch_size,shuffle=False)
     dataloader_val=DataLoader(dataset_val,batch_size,shuffle=True)
     
+  
+    # for batch in dataloader_train:
+    #         print(batch)
+    #         features,labels=batch
+    #         print(features.shape)
+    #         print(labels.shape)
+    #         break
+    model=FeedForward()
+    epochs=200
+    model(dataloader_train)
