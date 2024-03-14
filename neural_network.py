@@ -35,12 +35,18 @@ class FeedForward(torch.nn.Module):
         return self.layers(features)
       
 def train(model,dataloader,epochs:int):
+     optimiser=torch.optim.SGD(model.parameters(),lr=0.001)
      for epoch in range(epochs):
           for batch_idx,batch in enumerate(dataloader):
                features,labels=batch 
+
+               #forward pass
                prediction=model(features)
                print(prediction)
-               break
+               
+               #Gradient optimisation
+               optimiser.step()
+               optimiser.zero_grad()
         
 if __name__=='__main__':
     file='clean_tabular_data.csv'
@@ -69,4 +75,4 @@ if __name__=='__main__':
     #         break
     model=FeedForward()
     epochs=200
-    model(dataloader_train)
+    train(model,dataloader_train,epochs)
