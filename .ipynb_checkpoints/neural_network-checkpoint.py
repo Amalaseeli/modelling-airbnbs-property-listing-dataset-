@@ -20,7 +20,6 @@ class AirbnbNightlyPriceRegressionDataset(Dataset):
     def __getitem__(self, index):
         feature=self.X[index]  
         label=self.y[index]
-       
         return (feature,label)
     
     def __len__(self):
@@ -43,7 +42,6 @@ def train(model,dataloader,epochs:int):
      '''The functions trains the model and adds loss to TensorBoard'''
      optimiser=torch.optim.SGD(model.parameters(),lr=0.001)
      writer=SummaryWriter()
-     batch_idx=0
 
      for epoch in range(epochs):
           for batch_idx,batch in enumerate(dataloader):
@@ -59,7 +57,6 @@ def train(model,dataloader,epochs:int):
                optimiser.step()
                optimiser.zero_grad()
                writer.add_scalar("loss",loss.item(),batch_idx)
-               batch_idx+=1
         
 if __name__=='__main__':
     file='clean_tabular_data.csv'
