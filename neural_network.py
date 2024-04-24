@@ -1,5 +1,6 @@
 from typing import Any
 import torch
+import yaml
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
@@ -28,28 +29,36 @@ class AirbnbNightlyPriceRegressionDataset(Dataset):
     
 #model class
 class FeedForward(torch.nn.Module):
-    def __init__(self) -> None:
+    def __init__(self,config) -> None:
         super().__init__()
-        self.layers=torch.nn.Sequential(
-            torch.nn.Linear(11,16),
-            torch.nn.ReLU(),
-            torch.nn.Linear(16,1)
-        )
+        width=config['hidden_layer_width']
+        depth=config['depth']
+        layers=[]
+        layers.append(torch.nn.Linear(11,width))
+        for hidden_layer in range(depth-1):
+            layers.append(torch.nn.ReLU())
+            layers.append(torch.nn.Linear(width, width))
+        layers.append(torch.nn.ReLU())
+        layers.append(torch.nn.Linear(width, 1))
+        layers.append(torch.nn.Sigmoid())
+        self.layers=torch.nn.Sequential(*layers)
+
 
     def forward(self, features) -> Any:
         return self.layers(features)
       
-def train(model,dataloader,epochs:int):
+def train(model,config,dataloader,epochs:int):
      '''The functions trains the model and adds loss to TensorBoard'''
-     optimiser=torch.optim.SGD(model.parameters(),lr=0.001)
+     optimiser=torch.optim.SGD(model.parameters(),lr=config['learning_rate'])
      writer=SummaryWriter()
      batch_idx=0
 
      for epoch in range(epochs):
           for batch_idx,batch in enumerate(dataloader):
-               features,labels=batch 
-               
-            
+               features,labels=batch # tensors: features:[16,11], labels:[16]
+               features=features.type(torch.float32)
+               labels=torch.unsqueeze(labels,1) # labels tensor size now is [16, 1]
+
                #forward pass
                prediction=model(features)
                loss=F.mse_loss(prediction,labels)
@@ -60,7 +69,27 @@ def train(model,dataloader,epochs:int):
                optimiser.zero_grad()
                writer.add_scalar("loss",loss.item(),batch_idx)
                batch_idx+=1
-        
+
+
+def get_rmse_r2_score(model,feature,label):
+    feature=torch.tensor(feature.values).type(torch.float32)   
+    label=torch.tensor(label.value).type(torch.float32)
+    label=torch.unsqueeze(label,1)
+    prediction=model(feature)
+    rmse_loss=torch.sqrt(F.mse_loss(prediction,label.float()))
+    r2_score = 1 - rmse_loss / torch.var(label.float())
+    return rmse_loss, r2_score
+
+def get_nn_config():
+    with open('nn_config.yaml','r') as file:
+        data=yaml.safe_load(file)
+        print(data)
+        return data
+       
+     
+
+
+
 if __name__=='__main__':
     file='clean_tabular_data.csv'
     df=pd.read_csv(file)
@@ -86,6 +115,10 @@ if __name__=='__main__':
     #         print(features.shape)
     #         print(labels.shape)
     #         break
-    model=FeedForward()
+    config=get_nn_config()
+    model=FeedForward(config)
+
+    print(model)
     epochs=200
     train(model,dataloader_train,epochs)
+    get_nn_config()
