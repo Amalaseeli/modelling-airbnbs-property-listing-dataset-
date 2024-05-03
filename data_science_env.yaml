@@ -110,4 +110,4 @@ dependencies:
     - wcwidth==0.2.5
     - werkzeug==2.2.2
     - wordcloud==1.8.2.2
-prefix: C:\Users\jared\miniconda3\envs\airbnb_env
+
