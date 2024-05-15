@@ -147,10 +147,10 @@ def generate_nn_configs():
     ''' Finds all possible combinations of hyperparameters
     and returns a list of dictionaries '''
     param_space = {
-    'optimizer': ['RMSProp', 'AdamW'],
-    'learning_rate': [0.01, 0.0001],
-    'hidden_layer_width': [10, 20],
-    'depth': [4, 6]
+    'optimizer': ['Adam', 'AdamW'],
+    'learning_rate': [0.01, 0.001,0.0001],
+    'hidden_layer_width': [32, 64],
+    'depth': [4, 8]
     }
     # Finds all combindations of hyperparameters    
     keys, values = zip(*param_space.items())
@@ -170,14 +170,14 @@ if __name__=='__main__':
     dataset_val = AirbnbNightlyPriceRegressionDataset(X_val, y_val)
 
     #Define Dataloader
-    batch_size=16
+    batch_size=64
     dataloader_train=DataLoader(dataset_train,batch_size=batch_size,shuffle=True)
     dataloader_test=DataLoader(dataset_test,batch_size=batch_size,shuffle=False)
     dataloader_val=DataLoader(dataset_val,batch_size=batch_size,shuffle=False)
    
     config=get_nn_config()
     model=FeedForward(config)
-    epochs= 120
+    epochs= 100
     model_folder="models/neural_networks/regression"
 
     parameter_dictionary=generate_nn_configs()
