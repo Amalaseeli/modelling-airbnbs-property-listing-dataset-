@@ -1,6 +1,8 @@
 from typing import Any
 import numpy as np
 import os
+import joblib
+from pathlib import Path
 import torch
 import time
 import json
@@ -13,8 +15,8 @@ import tabular_data
 import pandas as pd
 import modelling
 import itertools
-
 import torch.nn.functional as F
+import sys
 
 
 #Dataloader class 
@@ -27,7 +29,6 @@ class AirbnbNightlyPriceRegressionDataset(Dataset):
     def __getitem__(self, index):
         feature=self.X[index]  
         label=self.y[index]
-       
         return (feature,label)
     
     def __len__(self):
@@ -54,7 +55,7 @@ class FeedForward(torch.nn.Module):
       
 def train(model,config,dataloader,epochs:int):
      '''The functions trains the model and adds loss to TensorBoard'''
-     optimiser=torch.optim.SGD(model.parameters(),lr=config['learning_rate'])
+     optimizer=torch.optim.Adam(model.parameters(),lr=config['learning_rate'])
      writer=SummaryWriter()
     #  batch_idx=0
 
@@ -71,8 +72,8 @@ def train(model,config,dataloader,epochs:int):
                loss.backward()
                
                #Gradient optimisation
-               optimiser.step()
-               optimiser.zero_grad()
+               optimizer.step()
+               optimizer.zero_grad()
                writer.add_scalar("loss",loss.item(),batch_idx)
             #    batch_idx+=1
 
@@ -95,7 +96,7 @@ def get_performance_of_matric(model,epochs,training_duration,X_train,y_train,X_v
     val_RMSE,val_r2_score=get_rmse_r2_score(model,X_val,y_val)
     test_RMSE,test_r2_score=get_rmse_r2_score(model,X_test,y_test)
 
-    print(f"Train RMSE: {train_RMSE:.2f} | Train R2: {train_r2_score.item():.2f}")
+    print(f"Train RMSE: {train_RMSE.item():.2f} | Train R2: {train_r2_score.item():.2f}")
     print(f"Validation RMSE: {val_RMSE.item():.2f} | Validation R2: {val_r2_score.item():.2f}")
     print(f"Test RMSE: {test_RMSE.item():.2f} | Test R2: {test_r2_score.item():.2f}")
 
@@ -117,32 +118,44 @@ def get_nn_config():
         #print(data)
         return data
     
-def save_model(model,hyperparam_dict,metrics_dict,folder):
+def save_model(model_type:str, model_name:str, model,hyperparam_dict,metrics_dict):
     '''detects whether the model is a PyTorch module'''
     if not isinstance(model,torch.nn.Module):
         print("The Model is not a Pytorch module")
     else:
-        current_date_time = datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
-        folder = f'{folder}/{current_date_time}'
-        os.makedirs(folder,exist_ok=True)
-        torch.save(model.state_dict(), f"{folder}/model.pt")
-        with open(f"{folder}/hyperparameters.json", 'w') as fp:
+        model_folder=Path(f'models/{model_type}/{model_name}')
+        current_date_time = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+        model_folder = Path(f"{model_folder}/{current_date_time}")
+        model_folder.mkdir(parents=True, exist_ok=True)
+        #os.makedirs(folder,exist_ok=True)
+        #torch.save(model.state_dict(), f"{folder}/model.pt")
+        model_path=model_folder.joinpath('model.pt')
+        joblib.dump(model,model_path)
+        hyperparameter_path=model_folder.joinpath('hyperparameters.json')
+        with open(hyperparameter_path, 'w') as fp:
             json.dump(hyperparam_dict, fp)
+            metrics_path=model_folder.joinpath('metrics.json')
+        with open( metrics_path, 'w') as fp:
+            json.dump( metrics_dict, fp)
+        #with open(f"{folder}/hyperparameters.json", 'w') as fp:
+         #   json.dump(hyperparam_dict, fp)
         # Saves performance metrics
-        with open(f"{folder}/metrics.json", 'w') as fp:
-            json.dump(metrics_dict, fp)
+        #with open(f"{folder}/metrics.json", 'w') as fp:
+         #   json.dump(metrics_dict, fp)
             
 def generate_nn_configs():
-    parameter_dict={
-        'optimizer':['Adam','SGD','Adagrad'],
-        'learning_rate':[0.01,0.001],
-        'hidden_layer_width':[16,32,64],
-        'depth':[4,6,10]
+    ''' Finds all possible combinations of hyperparameters
+    and returns a list of dictionaries '''
+    param_space = {
+    'optimizer': ['RMSProp', 'AdamW'],
+    'learning_rate': [0.01, 0.0001],
+    'hidden_layer_width': [10, 20],
+    'depth': [4, 6]
     }
-    # find all possible combinations of parameters 
-    keys, values = zip(*parameter_dict.items())
-    config_dict = [dict(zip(keys, v)) for v in itertools.product(*values)]
-    return config_dict
+    # Finds all combindations of hyperparameters    
+    keys, values = zip(*param_space.items())
+    param_dict_list = [dict(zip(keys, v)) for v in itertools.product(*values)]
+    return param_dict_list
 
 if __name__=='__main__':
     file='clean_tabular_data.csv'
@@ -150,7 +163,7 @@ if __name__=='__main__':
     X,y=tabular_data.load_airbnb(df)
 
     X_train,y_train,X_test,y_test,X_val,y_val=modelling.split_data(X,y)
-
+    
     #Define Datasets
     dataset_train=AirbnbNightlyPriceRegressionDataset(X_train,y_train)
     dataset_test =AirbnbNightlyPriceRegressionDataset(X_test,y_test)
@@ -158,14 +171,14 @@ if __name__=='__main__':
 
     #Define Dataloader
     batch_size=16
-    dataloader_train=DataLoader(dataset_train,batch_size,shuffle=True)
-    dataloader_test=DataLoader(dataset_test,batch_size,shuffle=False)
-    dataloader_val=DataLoader(dataset_val,batch_size,shuffle=True)
+    dataloader_train=DataLoader(dataset_train,batch_size=batch_size,shuffle=True)
+    dataloader_test=DataLoader(dataset_test,batch_size=batch_size,shuffle=False)
+    dataloader_val=DataLoader(dataset_val,batch_size=batch_size,shuffle=False)
    
     config=get_nn_config()
     model=FeedForward(config)
-    epochs= 200
-    folder='models/neural_networks/regression'
+    epochs= 120
+    model_folder="models/neural_networks/regression"
 
     parameter_dictionary=generate_nn_configs()
     best_val_loss=np.inf
@@ -177,21 +190,22 @@ if __name__=='__main__':
         duration=end_time-start_time
 
         metric_dict=get_performance_of_matric(model,epochs,duration,X_train,y_train,X_val,y_val,X_test,y_test)
-        save_model(model,parameter_dict,metric_dict,folder)
+        save_model('neural_networks', 'regression', model, parameter_dict,metric_dict)
 
         validation_RMSE=metric_dict['RMSE_loss_val']
-        if validation_RMSE<best_val_loss:
-            best_val_loss=validation_RMSE
+        if validation_RMSE < best_val_loss :
+            best_val_loss = validation_RMSE
 
-            best_model_folder='models/neural_networks/regression/best_model'
-            os.makedirs(best_model_folder,exist_ok=True)
+            best_model_folder = "models/neural_networks/regression/best_model"
 
-            if os.path.exists(f'{best_model_folder}/model.pt')==False:
+            os.makedirs(best_model_folder, exist_ok = True)
+
+            if os.path.exists(f"{best_model_folder}/model.pt") == False:
                 print("Best model written")
             else:
                 print("The model is overwritten")
 
-            torch.save(model.state_dict(),f'{best_model_folder}/model.pt')
+            torch.save(model.state_dict(), f"{best_model_folder}/model.pt")
             #save parameters
             with open(f"{best_model_folder}/hyperparameter.json",'w')as fp:
                 json.dump(parameter_dict,fp)

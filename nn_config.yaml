@@ -1,6 +1,4 @@
-optimiser : 
-  - torch.optim.SGD
-  - Adam
-learning_rate : 0.001
+optimiser : Adam
+learning_rate : 0.0001
 hidden_layer_width : 10
-depth : 10
+depth : 4
