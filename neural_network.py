@@ -177,7 +177,7 @@ if __name__=='__main__':
    
     config=get_nn_config()
     model=FeedForward(config)
-    epochs= 100
+    epochs= 200
     model_folder="models/neural_networks/regression"
 
     parameter_dictionary=generate_nn_configs()
