@@ -161,7 +161,7 @@ if __name__=='__main__':
     file='clean_tabular_data.csv'
     df=pd.read_csv(file)
     X,y=tabular_data.load_airbnb(df)
-
+    
     X_train,y_train,X_test,y_test,X_val,y_val=modelling.split_data(X,y)
     
     #Define Datasets
