@@ -100,11 +100,42 @@ def find_best_cls_model(model_list,folder):
 
     return best_reg_model, parameters, performance_metric
 
+# DecisionTreeClassifier
+parameter_grid_dtc={
+        "criterion": ['gini', 'entropy'],
+        "max_depth": range(1,10),
+        "min_samples_split": range(1,10),
+        "min_samples_leaf": range(1,5)
+    }
+    
+    # RandomForestClassifier
+parameter_grid_rfc = { 
+        'n_estimators': [200, 500],
+        'max_depth' : [4,5,6],
+        'criterion' :['gini', 'entropy']
+    }
+
+    #GradientBoostingClassifier
+parameter_grid_gbc = {
+        "n_estimators": [25, 50],
+        "loss": ["log_loss"]
+    }
+
+model_list = [
+        DecisionTreeClassifier(),
+        RandomForestClassifier(),
+        GradientBoostingClassifier()
+    ]
+
+parameter_grid_list= [parameter_grid_dtc, parameter_grid_rfc, parameter_grid_gbc]
+
 if __name__=='__main__':
     file='clean_tabular_data.csv'
     df=pd.read_csv(file)
     X,y=tabular_data.load_airbnb(df)
     X_train,y_train,X_test,y_test,X_validation,y_validation=modelling.split_data(X,y)
+
+ 
 
     #Select model
     model=LogisticRegression(max_iter=200)
@@ -137,34 +168,7 @@ if __name__=='__main__':
 
     #Now tuning three other models: decision trees, random forests, and gradient boosting
 
-    # DecisionTreeClassifier
-    parameter_grid_dtc={
-        "criterion": ['gini', 'entropy'],
-        "max_depth": range(1,10),
-        "min_samples_split": range(1,10),
-        "min_samples_leaf": range(1,5)
-    }
-    
-    # RandomForestClassifier
-    parameter_grid_rfc = { 
-        'n_estimators': [200, 500],
-        'max_depth' : [4,5,6],
-        'criterion' :['gini', 'entropy']
-    }
-
-    #GradientBoostingClassifier
-    parameter_grid_gbc = {
-        "n_estimators": [25, 50],
-        "loss": ["log_loss"]
-    }
-
-    model_list = [
-        DecisionTreeClassifier(),
-        RandomForestClassifier(),
-        GradientBoostingClassifier()
-    ]
-
-    parameter_grid_list= [parameter_grid_dtc, parameter_grid_rfc, parameter_grid_gbc]
+       
 
     evaluate_all_cls_models(model_list, parameter_grid_list)
     
