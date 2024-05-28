@@ -18,7 +18,6 @@ import itertools
 import torch.nn.functional as F
 import sys
 
-
 #Dataloader class 
 class AirbnbNightlyPriceRegressionDataset(Dataset):
     def __init__(self,feature,label):
@@ -36,12 +35,12 @@ class AirbnbNightlyPriceRegressionDataset(Dataset):
     
 #model class
 class FeedForward(torch.nn.Module):
-    def __init__(self,config) -> None:
+    def __init__(self,config,feature_length:int) -> None:
         super().__init__()
         width=config['hidden_layer_width']
         depth=config['depth']
         layers=[]
-        layers.append(torch.nn.Linear(11,width))
+        layers.append(torch.nn.Linear(feature_length,width))
         for hidden_layer in range(depth-1):
             layers.append(torch.nn.ReLU())
             layers.append(torch.nn.Linear(width, width))
@@ -127,8 +126,6 @@ def save_model(model_type:str, model_name:str, model,hyperparam_dict,metrics_dic
         current_date_time = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
         model_folder = Path(f"{model_folder}/{current_date_time}")
         model_folder.mkdir(parents=True, exist_ok=True)
-        #os.makedirs(folder,exist_ok=True)
-        #torch.save(model.state_dict(), f"{folder}/model.pt")
         model_path=model_folder.joinpath('model.pt')
         joblib.dump(model,model_path)
         hyperparameter_path=model_folder.joinpath('hyperparameters.json')
@@ -137,11 +134,6 @@ def save_model(model_type:str, model_name:str, model,hyperparam_dict,metrics_dic
             metrics_path=model_folder.joinpath('metrics.json')
         with open( metrics_path, 'w') as fp:
             json.dump( metrics_dict, fp)
-        #with open(f"{folder}/hyperparameters.json", 'w') as fp:
-         #   json.dump(hyperparam_dict, fp)
-        # Saves performance metrics
-        #with open(f"{folder}/metrics.json", 'w') as fp:
-         #   json.dump(metrics_dict, fp)
             
 def generate_nn_configs():
     ''' Finds all possible combinations of hyperparameters
@@ -157,33 +149,15 @@ def generate_nn_configs():
     param_dict_list = [dict(zip(keys, v)) for v in itertools.product(*values)]
     return param_dict_list
 
-if __name__=='__main__':
-    file='clean_tabular_data.csv'
-    df=pd.read_csv(file)
-    X,y=tabular_data.load_airbnb(df)
-    
-    X_train,y_train,X_test,y_test,X_val,y_val=modelling.split_data(X,y)
-    
-    #Define Datasets
-    dataset_train=AirbnbNightlyPriceRegressionDataset(X_train,y_train)
-    dataset_test =AirbnbNightlyPriceRegressionDataset(X_test,y_test)
-    dataset_val = AirbnbNightlyPriceRegressionDataset(X_val, y_val)
-
-    #Define Dataloader
-    batch_size=64
-    dataloader_train=DataLoader(dataset_train,batch_size=batch_size,shuffle=True)
-    dataloader_test=DataLoader(dataset_test,batch_size=batch_size,shuffle=False)
-    dataloader_val=DataLoader(dataset_val,batch_size=batch_size,shuffle=False)
-   
-    config=get_nn_config()
-    model=FeedForward(config)
+def find_best_nn(X_train,y_train,X_val,y_val,X_test,y_test,dataloader_train):
     epochs= 200
+    input_length=len(X_train.columns)
     model_folder="models/neural_networks/regression"
-
     parameter_dictionary=generate_nn_configs()
     best_val_loss=np.inf
     for idx,parameter_dict in enumerate(parameter_dictionary):
-        model=FeedForward(parameter_dict)
+        
+        model=FeedForward(parameter_dict,input_length)
         start_time=time.time()
         train(model,parameter_dict,dataloader_train,epochs)
         end_time=time.time()
@@ -214,4 +188,29 @@ if __name__=='__main__':
             with open(f"{best_model_folder}/metrics.json",'w') as fp:
                 json.dump(metric_dict,fp)
         print("--" * 10)
+    
+
+if __name__=='__main__':
+    file='clean_tabular_data.csv'
+    df=pd.read_csv(file)
+    X,y=tabular_data.load_airbnb(df)
+    
+    X_train,y_train,X_test,y_test,X_val,y_val=modelling.split_data(X,y)
+    
+    #Define Datasets
+    dataset_train=AirbnbNightlyPriceRegressionDataset(X_train,y_train)
+    dataset_test =AirbnbNightlyPriceRegressionDataset(X_test,y_test)
+    dataset_val = AirbnbNightlyPriceRegressionDataset(X_val, y_val)
+
+    #Define Dataloader
+    batch_size=64
+    dataloader_train=DataLoader(dataset_train,batch_size=batch_size,shuffle=True)
+    dataloader_test=DataLoader(dataset_test,batch_size=batch_size,shuffle=False)
+    dataloader_val=DataLoader(dataset_val,batch_size=batch_size,shuffle=False)
+   
+    config=get_nn_config()
+    model=FeedForward(config,11)
+    
+    find_best_nn(X_train,y_train,X_val,y_val,X_test,y_test,dataloader_train)
+    
 

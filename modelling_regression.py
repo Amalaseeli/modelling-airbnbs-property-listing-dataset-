@@ -9,7 +9,7 @@ from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.ensemble import GradientBoostingRegressor
 
-def evaluate_all_models(model_list, parameter_grid_list):
+def evaluate_all_models(model_list, parameter_grid_list,X_train, y_train, X_test, y_test, X_validation, y_validation,folder):
 
     # looping over models and corresponding parameter grids
     for i in range(len(model_list)):
@@ -22,7 +22,7 @@ def evaluate_all_models(model_list, parameter_grid_list):
         
         # defines folder name to save the model, parameter and metrics
         model_name = str(model)[:-2]        
-        folder_path = f"models/regression/{model_name}"
+        folder_path = f"{folder}/{model_name}"
 
         os.makedirs(folder_path, exist_ok=True)
 
@@ -93,9 +93,9 @@ if __name__=='__main__':
     X_train, y_train, X_test, y_test, X_validation, y_validation = modelling.split_data(X,y)
 
     
-
-    evaluate_all_models(model_list, parameter_grid_list)
     folder = "models/regression"
+    evaluate_all_models(model_list, parameter_grid_list,X_train, y_train, X_test, y_test, X_validation, y_validation,folder)
+    
     best_reg_model, parameters, performance_metric = find_best_model(model_list, folder)
 
     print(f"The best regression model is {best_reg_model}")

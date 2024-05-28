@@ -147,7 +147,7 @@ if __name__=='__main__':
     y_train_pred, y_test_pred, y_validation_pred = make_predictions(model, X_train, X_test, X_validation)
 
     #Get performance metrices for classification model
-    performance_metric=get_metrics_for_classification_model(y_train,y_train_pred,y_test,y_test_pred,y_validation,y_validation_pred)
+    performance_metric = get_metrics_for_classification_model(y_train,y_train_pred,y_test,y_test_pred,y_validation,y_validation_pred)
 
     #printing the metrices
     print(f"\t Train \t Test \t Validation")

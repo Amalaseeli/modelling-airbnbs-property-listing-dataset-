@@ -47,8 +47,6 @@ def save_model(folder:str, best_model, best_params:dict, performance_metric:dict
 
 if __name__ == "__main__":
 
-    # load the data
-#     file = 'clean_tabular_data.csv'
     df = pd.read_csv('clean_data.csv')
     X,y = tabular_data.load_airbnb(df)
     X_train, y_train, X_test, y_test, X_validation, y_validation = modelling.split_data(X,y)
