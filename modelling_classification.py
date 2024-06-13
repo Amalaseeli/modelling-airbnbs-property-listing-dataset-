@@ -132,7 +132,11 @@ parameter_grid_list= [parameter_grid_dtc, parameter_grid_rfc, parameter_grid_gbc
 if __name__=='__main__':
     file='clean_tabular_data.csv'
     df=pd.read_csv(file)
-    X,y=tabular_data.load_airbnb(df)
+    X,label=tabular_data.load_airbnb(df)
+    X['Price_Night']=df['Price_Night']
+    y=df['Category']
+    print(X)
+    print(y)
     X_train,y_train,X_test,y_test,X_validation,y_validation=modelling.split_data(X,y)
 
  
