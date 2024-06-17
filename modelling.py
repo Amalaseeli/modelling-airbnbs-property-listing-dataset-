@@ -10,7 +10,7 @@ from sklearn.metrics import r2_score
 
 def split_data(X, y):
     '''Splits Test, Train and Validation data'''
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
     X_test, X_validation, y_test, y_validation = train_test_split(X_test, y_test, test_size=0.5)
     return X_train, y_train, X_test, y_test, X_validation, y_validation
 

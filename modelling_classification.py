@@ -6,8 +6,6 @@ import tabular_data
 import modelling
 import numpy as np
 import hyperparameter
-from sklearn.linear_model import LogisticRegression
-import sklearn
 from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score,confusion_matrix
 from sklearn.linear_model import LogisticRegression

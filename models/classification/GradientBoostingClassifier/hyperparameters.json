@@ -1,1 +1,1 @@
-{"loss": "log_loss", "n_estimators": 50}
+{"loss": "log_loss", "n_estimators": 25}

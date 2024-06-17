@@ -1,22 +1,21 @@
-from typing import Any
-import numpy as np
 import os
 import joblib
-from pathlib import Path
 import torch
 import time
 import json
 import yaml
-from datetime import datetime
-from torch.utils.data import Dataset
-from torch.utils.data import DataLoader
-from torch.utils.tensorboard import SummaryWriter
 import tabular_data
+import numpy as np
 import pandas as pd
 import modelling
 import itertools
 import torch.nn.functional as F
-import sys
+from typing import Any
+from pathlib import Path
+from datetime import datetime
+from torch.utils.data import Dataset
+from torch.utils.data import DataLoader
+from torch.utils.tensorboard import SummaryWriter
 
 #Dataloader class 
 class AirbnbNightlyPriceRegressionDataset(Dataset):
@@ -57,9 +56,16 @@ def train(model,config,dataloader,epochs:int):
      optimizer=torch.optim.Adam(model.parameters(),lr=config['learning_rate'])
      writer=SummaryWriter()
     #  batch_idx=0
-
      for epoch in range(epochs):
-          for batch_idx,batch in enumerate(dataloader):
+          for batch_idx,batch in enumerate(dataloader_train):
+               features,labels=batch # tensors: features:[16,11], labels:[16]
+               features=features.type(torch.float32)
+               labels=torch.unsqueeze(labels,1) # labels tensor size now is [16, 1]
+
+               #forward pass
+               prediction=model(features)
+               loss=F.mse_loss(prediction,labels)
+          for batch_idx,batch in enumerate(dataloader_val):
                features,labels=batch # tensors: features:[16,11], labels:[16]
                features=features.type(torch.float32)
                labels=torch.unsqueeze(labels,1) # labels tensor size now is [16, 1]
@@ -68,6 +74,8 @@ def train(model,config,dataloader,epochs:int):
                prediction=model(features)
                loss=F.mse_loss(prediction,labels)
                
+               
+    
                loss.backward()
                
                #Gradient optimisation
@@ -75,6 +83,9 @@ def train(model,config,dataloader,epochs:int):
                optimizer.zero_grad()
                writer.add_scalar("loss",loss.item(),batch_idx)
             #    batch_idx+=1
+
+       
+               
 
 
 def get_rmse_r2_score(model,feature,label):
